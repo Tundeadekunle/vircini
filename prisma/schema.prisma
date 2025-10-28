@@ -1,0 +1,362 @@
+// Prisma schema for social streaming app (PostgreSQL)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum RecommendationReactionType {
+  LIKE
+  DISLIKE
+}
+
+enum Role {
+  USER
+  ADMIN
+  MOVIE_OWNER
+}
+
+enum NotificationType {
+  NEW_MOVIE_BY_FOLLOWED_ARTIST
+  NEW_RELEASE
+  FRIEND_REQUEST
+  RECOMMENDATION
+  SESSION_INVITE
+  OTHER
+}
+
+// enums
+enum Plan {
+  FREE
+  PREMIUM
+  VIP
+}
+
+model User {
+  id                     String           @id @default(uuid())
+  name                   String?
+  username               String?           @unique
+  email                  String           @unique
+  emailVerified         DateTime?
+  passwordHash           String?
+  image               String?
+  // accounts                Account[]
+    accounts  Account[] @relation("AccountUser")  
+  sessions                Session[]     
+  role                   Role             @default(USER)
+  createdAt              DateTime         @default(now())
+  // Friendships (join table)
+  friends                Friend[]         @relation("UserFriends")
+  friendRequestsSent     FriendRequest[]  @relation("FromUser")
+  friendRequestsReceived FriendRequest[]  @relation("ToUser")
+  // Recommendations made and received
+  recommendationsSent    Recommendation[]  @relation("RecommendationFrom")
+  recommendationsReceived Recommendation[]  @relation("RecommendationTo")
+  recommendationReactions RecommendationReaction[]
+  // Artist follows
+  // follows                UserArtistFollow[]
+  followedArtists Artist[] @relation("ArtistFollowers")
+  artistFollows   UserArtistFollow[]
+  // Sessions
+  hostedSessions         WatchSession[]   @relation("HostUser")
+  participantSessions    SessionParticipant[]
+  // Chat
+  chatMessages           ChatMessage[]
+  chatMessageReactions   ChatMessageReaction[]
+  // Owned movies (for movie owners)
+  ownedMovies            Movie[]          @relation("MovieOwner")
+  // Notifications
+  notifications          Notification[]
+  // analytics / metadata
+  lastActiveAt           DateTime?
+
+  Friend Friend[]
+
+  Agreement Agreement[]
+// billing
+  plan            Plan     @default(FREE)
+  stripeCustomerId String? @unique
+  stripeSubscriptionId String?
+  subscriptionEnd  DateTime?
+  currentPeriodEnd DateTime?
+}
+
+model Session {
+id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?  @db.Text
+  access_token       String?  @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?  @db.Text
+  session_state      String?
+
+  // user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User    @relation("AccountUser", fields: [userId], references: [id])
+
+  @@unique([provider, providerAccountId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Friend {
+  // directional friendship entity; application logic can treat as mutual when both directions exist or enforce a canonical ordering
+  id         String   @id @default(uuid())
+  user       User     @relation("UserFriends", fields: [userId], references: [id])
+  userId     String
+  friend     User     @relation(fields: [friendId], references: [id])
+  friendId   String
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, friendId])
+  @@index([userId])
+  @@index([friendId])
+}
+
+model FriendRequest {
+  id         String               @id @default(uuid())
+  fromUser   User                 @relation("FromUser", fields: [fromUserId], references: [id])
+  fromUserId String
+  toUser     User                 @relation("ToUser", fields: [toUserId], references: [id])
+  toUserId   String
+  status     FriendRequestStatus  @default(PENDING)
+  message    String?
+  createdAt  DateTime             @default(now())
+
+  @@index([toUserId, status])
+  @@index([fromUserId])
+}
+
+// model Artist {
+//   id          String   @id @default(uuid())
+//   name        String
+//   bio         String?
+//   externalId  String?   // e.g. link to external metadata source
+//   createdAt   DateTime  @default(now())
+//   // relations
+//   movieCredits MovieArtist[]
+//   followers    UserArtistFollow[]
+//   @@index([name])
+// }
+
+
+model Artist {
+  id             String   @id @default(uuid())
+  name           String
+  country        String?       // industry / country
+  youtubeChannel String?       // channel id (optional)
+  movies         Movie[]       @relation("ArtistMovies")
+  movieCredits   MovieArtist[] @relation("ArtistMovieCredits")
+  followers      User[]        @relation("ArtistFollowers")
+  artistFollows  UserArtistFollow[]
+  createdAt      DateTime @default(now())
+}
+
+model Movie {
+  id              String         @id @default(uuid())
+  title           String
+  description     String?
+  posterUrl       String?
+  durationSeconds Int?
+  priceCents      Int?           // price in cents; nullable if free
+  owner           User?          @relation("MovieOwner", fields: [ownerId], references: [id])
+  ownerId         String?
+  // revenue agreements
+  agreement       Agreement?     @relation(fields: [agreementId], references: [id])
+  agreementId     String?
+  // relations
+  artist   Artist? @relation("ArtistMovies", fields: [artistId], references: [id])
+  artistId String? 
+  credits         MovieArtist[]
+  sessions        WatchSession[]
+  recommendations Recommendation[] @relation("RecommendationMovie")
+  createdAt       DateTime       @default(now())
+
+  @@index([title])
+}
+model MovieArtist {
+  id        String  @id @default(uuid())
+  movie     Movie   @relation(fields: [movieId], references: [id])
+  movieId   String
+  artist    Artist  @relation("ArtistMovieCredits", fields: [artistId], references: [id])
+  artistId  String
+  role      String? // "actor", "director", etc.
+  @@unique([movieId, artistId, role])
+}
+
+
+model Agreement {
+  // revenue-sharing agreement between platform and owner (or third party)
+  id              String   @id @default(uuid())
+  owner           User     @relation(fields: [ownerId], references: [id])
+  ownerId         String
+  percentToOwner  Float    // e.g. 70.5 means owner gets 70.5% of revenue
+  terms           String?
+  effectiveFrom   DateTime
+  effectiveTo     DateTime?
+  createdAt       DateTime @default(now())
+
+  @@index([ownerId])
+  Movie Movie[]
+}
+
+model Recommendation {
+  id        String   @id @default(uuid())
+  fromUser  User     @relation("RecommendationFrom", fields: [fromUserId], references: [id])
+  fromUserId String
+  toUser    User     @relation("RecommendationTo", fields: [toUserId], references: [id])
+  toUserId   String
+  movie     Movie    @relation("RecommendationMovie", fields: [movieId], references: [id])
+  movieId    String
+  note      String?
+  createdAt DateTime @default(now())
+
+  reactions RecommendationReaction[]
+  @@index([toUserId])
+  @@index([fromUserId])
+}
+
+model RecommendationReaction {
+  id          String                     @id @default(uuid())
+  recommendation Recommendation           @relation(fields: [recommendationId], references: [id])
+  recommendationId String
+  user        User                       @relation(fields: [userId], references: [id])
+  userId      String
+  type        RecommendationReactionType
+  createdAt   DateTime                   @default(now())
+
+  @@unique([recommendationId, userId])
+  @@index([userId])
+  @@index([recommendationId])
+}
+
+model UserArtistFollow {
+  id        String  @id @default(uuid())
+  user      User    @relation(fields: [userId], references: [id])
+  userId    String
+  artist    Artist  @relation(fields: [artistId], references: [id])
+  artistId  String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, artistId])
+  @@index([artistId])
+}
+
+model WatchSession {
+  id              String              @id @default(uuid())
+  movie           Movie               @relation(fields: [videoId], references: [id])
+  // movieId         String
+  videoId     String    // your internal Movie/Video id or YouTube videoId
+  platform    String    // "youtube" | ...
+  isActive    Boolean   @default(true)
+  // createdAt   DateTime  @default(now())
+  hostUser        User                @relation("HostUser", fields: [hostUserId], references: [id])
+  hostUserId      String
+  scheduledTime   DateTime
+  durationSeconds Int?
+  isPublic        Boolean             @default(true)
+  // real-time sync fields (last-known, can be updated in Redis or persisted occasionally)
+  playbackPositionMs Int?             // position in ms
+  playbackState      String?          // "PLAYING", "PAUSED", etc.
+  // participants stored via join table for metadata
+  participants      SessionParticipant[]
+  chatMessages      ChatMessage[]
+  createdAt         DateTime           @default(now())
+
+  @@index([scheduledTime])
+  @@index([videoId])
+  @@index([hostUserId])
+}
+model SessionParticipant {
+  id           String       @id @default(uuid())
+  watchsession      WatchSession @relation(fields: [sessionId], references: [id])
+  sessionId    String
+  user         User         @relation(fields: [userId], references: [id])
+  userId       String
+  joinedAt     DateTime     @default(now())
+  leftAt       DateTime?
+  isHost       Boolean      @default(false)
+
+  @@unique([sessionId, userId])
+  @@index([userId])
+}
+
+model ChatMessage {
+  id        String       @id @default(uuid())
+  watchSession   WatchSession @relation(fields: [sessionId], references: [id])
+  sessionId String
+  user      User         @relation(fields: [userId], references: [id])
+  userId    String
+  message   String
+  content      String
+  type      String?       // e.g., "TEXT", "SYSTEM"
+  timestamp DateTime      @default(now())
+  reactions ChatMessageReaction[]
+
+  @@index([sessionId, timestamp])
+}
+
+model ChatMessageReaction {
+  id           String      @id @default(uuid())
+  chatMessage  ChatMessage @relation(fields: [chatMessageId], references: [id])
+  chatMessageId String
+  user         User        @relation(fields: [userId], references: [id])
+  userId       String
+  emoji        String      // store the emoji or short code
+  createdAt    DateTime    @default(now())
+
+  @@unique([chatMessageId, userId, emoji])
+  @@index([userId])
+}
+
+model Notification {
+  id           String           @id @default(uuid())
+  user         User             @relation(fields: [userId], references: [id])
+  userId       String
+  type         NotificationType
+  title        String
+  body         String?
+  data         Json?            // additional structured payload: { movieId, sessionId, artistId }
+  isRead       Boolean          @default(false)
+  createdAt    DateTime         @default(now())
+
+  @@index([userId, isRead])
+}
+
+// Optional: movies you curate (so we can filter to >= 1 year old)
+// model Movie {
+//   id           String   @id @default(cuid())
+//   title        String
+//   youtubeId    String?  @unique
+//   releaseDate  DateTime
+//   platform     String   @default("youtube")
+//   createdAt    DateTime @default(now())
+// }

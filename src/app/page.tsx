@@ -1,103 +1,55 @@
+import Link from "next/link";
 import Image from "next/image";
+import Header from "./components/header/page";
+// import { useSession } from "next-auth/react";
+// import { useEffect } from "react";
+// import { useRouter } from "next/navigation";
+// import { getServerSession } from "next-auth";
+// import { authOptions } from "./api/auth/[...nextauth]/route";
+import Navbar from "./components/navbar/page";
 
 export default function Home() {
+  
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-950 dark:from-gray-900 dark:to-gray-800 p-8 max-w-full">
+      <div className="flex justify-between gap-96 items-center mb-8 w-full">
+        {/* <Navbar/> */}
+        <Header/>
+      </div>
+      <header className="flex flex-col items-center mb-10">
+        
+        <h1 className="text-6xl font-bold mb-2 text-center bg-gradient-to-r from-pink-500 via-pink-500 to-purple-600 text-transparent bg-clip-text">Vircini</h1>
+        <p className="text-lg text-gray-600 dark:text-gray-300 text-center max-w-xl">
+          Watch movies together, chat live, recommend films, and connect with friends—all in one place.
+        </p>
+      </header>
+      <main className="w-full max-w-2xl flex flex-col gap-8 items-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
+          <FeatureCard title="Group Watch" desc="Schedule and join movie sessions with friends." icon="/window.svg" />
+          <FeatureCard title="Live Chat" desc="Chat in real time during group watch or about any movie." icon="/vercel.svg" />
+          <FeatureCard title="Friend System" desc="Search, add, and manage your friends." icon="/file.svg" />
+          <FeatureCard title="Movie Recommendations" desc="Recommend and discuss movies with your network." icon="/globe.svg" />
         </div>
+        <nav className="flex flex-wrap gap-4 justify-center mt-8">
+          <Link href="/login" className="px-6 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">Login</Link>
+          <Link href="/signup" className="px-6 py-2 rounded bg-orange-500 text-white font-semibold hover:bg-orange-600 transition">Sign Up</Link>
+          <Link href="/dashboard" className="px-6 py-2 rounded bg-gray-200 dark:bg-gray-700 dark:text-white font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition">Dashboard</Link>
+          <Link href="/friends" className="px-6 py-2 rounded bg-green-500 text-white font-semibold hover:bg-green-600 transition">Friends</Link>
+          <Link href="/movies" className="px-6 py-2 rounded bg-purple-500 text-white font-semibold hover:bg-purple-600 transition">Movies</Link>
+          <Link href="/sessions" className="px-6 py-2 rounded bg-pink-500 text-white font-semibold hover:bg-pink-600 transition">Group Watch</Link>
+        </nav>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      <footer className="mt-16 text-gray-400 text-xs">&copy; {new Date().getFullYear()} Vircini Social Streaming</footer>
+    </div>
+  );
+}
+
+function FeatureCard({ title, desc, icon }: { title: string; desc: string; icon: string }) {
+  return (
+    <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 flex flex-col items-center text-center border border-gray-100 dark:border-gray-800">
+      <Image src={icon} alt={title} width={40} height={40} className="mb-2" />
+      <h3 className="font-bold text-lg mb-1">{title}</h3>
+      <p className="text-gray-500 dark:text-gray-400 text-sm">{desc}</p>
     </div>
   );
 }
