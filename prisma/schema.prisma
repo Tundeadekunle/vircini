@@ -155,19 +155,6 @@ model FriendRequest {
   @@index([fromUserId])
 }
 
-// model Artist {
-//   id          String   @id @default(uuid())
-//   name        String
-//   bio         String?
-//   externalId  String?   // e.g. link to external metadata source
-//   createdAt   DateTime  @default(now())
-//   // relations
-//   movieCredits MovieArtist[]
-//   followers    UserArtistFollow[]
-//   @@index([name])
-// }
-
-
 model Artist {
   id             String   @id @default(uuid())
   name           String
@@ -272,8 +259,9 @@ model UserArtistFollow {
 
 model WatchSession {
   id              String              @id @default(uuid())
-  movie           Movie               @relation(fields: [videoId], references: [id])
-  // movieId         String
+  // movie           Movie               @relation(fields: [videoId], references: [id])
+  movieId         String?
+  movie           Movie?              @relation(fields: [movieId], references: [id])
   videoId     String    // your internal Movie/Video id or YouTube videoId
   platform    String    // "youtube" | ...
   isActive    Boolean   @default(true)
@@ -295,6 +283,7 @@ model WatchSession {
   @@index([videoId])
   @@index([hostUserId])
 }
+
 model SessionParticipant {
   id           String       @id @default(uuid())
   watchsession      WatchSession @relation(fields: [sessionId], references: [id])
@@ -350,13 +339,3 @@ model Notification {
 
   @@index([userId, isRead])
 }
-
-// Optional: movies you curate (so we can filter to >= 1 year old)
-// model Movie {
-//   id           String   @id @default(cuid())
-//   title        String
-//   youtubeId    String?  @unique
-//   releaseDate  DateTime
-//   platform     String   @default("youtube")
-//   createdAt    DateTime @default(now())
-// }
