@@ -11,11 +11,10 @@ interface Friend {
     };
 }
 
-export default function FriendsList({ userId }: { userId: string }) {
-    const [friends, setFriends] = useState<Friend[]>([]);
+export default function FriendsList({ userId, initialFriends = [] }: { userId: string; initialFriends?: Friend[] }) {
+    const [friends, setFriends] = useState<Friend[]>(initialFriends);
 
     const fetchFriends = async () => {
-        // Need an endpoint for this too. I'll create /api/friends/list/route.ts
         try {
             const res = await fetch(`/api/friends/list?userId=${userId}`);
             if (res.ok) {
@@ -26,7 +25,11 @@ export default function FriendsList({ userId }: { userId: string }) {
     };
 
     useEffect(() => {
-        fetchFriends();
+        // If we didn't get initial friends (e.g. client navigation if not passed), fetch them.
+        // But since we are passing them from server component, this is mostly for updates or fallback.
+        if (initialFriends.length === 0) {
+            fetchFriends();
+        }
 
         // Listen for friend acceptance via WS
         const ws = new WebSocket("ws://localhost:3002");
@@ -40,7 +43,7 @@ export default function FriendsList({ userId }: { userId: string }) {
             }
         };
         return () => ws.close();
-    }, [userId]);
+    }, [userId, initialFriends.length]);
 
     if (friends.length === 0) return (
         <div className="bg-white p-4 rounded shadow">

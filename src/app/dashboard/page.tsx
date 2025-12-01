@@ -7,6 +7,7 @@ import FriendRecommendations from "./FriendRecommendations";
 import FriendRequests from "./FriendRequests";
 import FriendsList from "./FriendsList";
 import InvitesList from "./InvitesList";
+import ScheduleSessionButton from "./ScheduleSessionButton"; // New client component for the button/modal logic
 import { prisma } from "@/lib/prisma";
 
 async function fetchYouTubeMovies(maxResults = 12) {
@@ -73,24 +74,36 @@ export default async function DashboardPage() {
   if (!user) return redirect("/login");
 
   // --- NEW: load user's followed artists server-side so we can list them on the dashboard ---
-  const userWithFollows = await prisma.user.findUnique({
+  // Also fetching friends here
+  const userWithData = await prisma.user.findUnique({
     where: { id: user.id },
     include: {
       followedArtists: {
         select: { id: true, name: true, youtubeChannel: true },
         orderBy: { name: "asc" },
       },
+      friends: {
+        include: {
+          friend: {
+            select: { id: true, username: true, image: true },
+          },
+        },
+      },
     },
   });
 
   const plan = user.plan ?? "FREE";
   const youTubeMovies = plan === "FREE" ? await fetchYouTubeMovies(12) : [];
+  const friends = userWithData?.friends || [];
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold">Welcome, {user.username}</h1>
-        <div className="text-sm text-gray-500">Plan: <b>{plan}</b></div>
+        <div className="flex items-center gap-4">
+          <ScheduleSessionButton userId={user.id} friends={friends} />
+          <div className="text-sm text-gray-500">Plan: <b>{plan}</b></div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -98,9 +111,9 @@ export default async function DashboardPage() {
         <div className="lg:col-span-2 space-y-6">
           <section>
             <h2 className="text-lg font-medium mb-3">Artists you follow</h2>
-            {userWithFollows?.followedArtists && userWithFollows.followedArtists.length > 0 ? (
+            {userWithData?.followedArtists && userWithData.followedArtists.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {userWithFollows.followedArtists.map((a) => (
+                {userWithData.followedArtists.map((a) => (
                   <div key={a.id} className="flex items-center gap-3 bg-white p-3 rounded shadow">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center text-sm font-bold text-gray-500">
@@ -157,7 +170,7 @@ export default async function DashboardPage() {
         <div className="space-y-6">
           <InvitesList userId={user.id} />
           <FriendRequests userId={user.id} />
-          <FriendsList userId={user.id} />
+          <FriendsList userId={user.id} initialFriends={friends} />
           <FriendRecommendations userId={user.id} />
         </div>
       </div>
