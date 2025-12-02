@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
   // });
 
 
-// ...existing code...
+  // ...existing code...
   // fetch sessions where the user is host or a participant
   const sessions = await prisma.watchSession.findMany({
     where: {
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
     },
     orderBy: { scheduledTime: 'asc' },
   });
-// ...existing code...
+  // ...existing code...
   return NextResponse.json(sessions);
 }
 
@@ -55,6 +55,7 @@ export async function POST(req: NextRequest) {
   const session = await prisma.watchSession.create({
     data: {
       movie: { connect: { id: movieId } },
+      videoId: "internal",
       hostUser: { connect: { id: hostUserId } },
       scheduledTime: new Date(scheduledTime),
       platform: platform ?? 'web',

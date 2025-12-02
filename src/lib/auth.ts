@@ -6,26 +6,7 @@ import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { type User } from "@prisma/client";
 
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string;
-      name?: string | null;
-      email?: string | null;
-      image?: string | null;
-      role?: string;
-      plan?: "FREE" | "PREMIUM" | "VIP";
-    };
-  }
-}
 
-declare module "next-auth/jwt" {
-  interface JWT {
-    id?: string;
-    role?: string;
-    plan?: "FREE" | "PREMIUM" | "VIP";
-  }
-}
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(db),

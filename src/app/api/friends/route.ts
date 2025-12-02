@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
   // List friends
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    include: { friends: { select: { id: true, username: true, email: true } } },
+    include: { friends: { include: { friend: { select: { id: true, username: true, email: true, image: true } } } } },
   });
   if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
   return NextResponse.json(user.friends);
@@ -40,12 +40,12 @@ export async function POST(req: NextRequest) {
     where: {
       fromUserId,
       toUserId,
-      status: 'pending',
+      status: 'PENDING',
     },
   });
   if (existing) return NextResponse.json({ error: 'Request already sent' }, { status: 400 });
   const reqCreated = await prisma.friendRequest.create({
-    data: { fromUserId, toUserId, status: 'pending' },
+    data: { fromUserId, toUserId, status: 'PENDING' },
   });
   return NextResponse.json(reqCreated);
 }
@@ -57,23 +57,22 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
   }
   const friendReq = await prisma.friendRequest.findUnique({ where: { id: requestId } });
-  if (!friendReq || friendReq.status !== 'pending') {
+  if (!friendReq || friendReq.status !== 'PENDING') {
     return NextResponse.json({ error: 'Request not found or already handled' }, { status: 404 });
   }
   if (action === 'accept') {
     // Add each user to the other's friends
-    await prisma.user.update({
-      where: { id: friendReq.fromUserId },
-      data: { friends: { connect: { id: friendReq.toUserId } } },
+    // Add each user to the other's friends
+    await prisma.friend.create({
+      data: { userId: friendReq.fromUserId, friendId: friendReq.toUserId },
     });
-    await prisma.user.update({
-      where: { id: friendReq.toUserId },
-      data: { friends: { connect: { id: friendReq.fromUserId } } },
+    await prisma.friend.create({
+      data: { userId: friendReq.toUserId, friendId: friendReq.fromUserId },
     });
-    await prisma.friendRequest.update({ where: { id: requestId }, data: { status: 'accepted' } });
+    await prisma.friendRequest.update({ where: { id: requestId }, data: { status: 'ACCEPTED' } });
     return NextResponse.json({ status: 'accepted' });
   } else {
-    await prisma.friendRequest.update({ where: { id: requestId }, data: { status: 'declined' } });
+    await prisma.friendRequest.update({ where: { id: requestId }, data: { status: 'DECLINED' } });
     return NextResponse.json({ status: 'declined' });
   }
 }

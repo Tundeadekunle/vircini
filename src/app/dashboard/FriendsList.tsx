@@ -60,7 +60,7 @@ export default function FriendsList({ userId, initialFriends = [] }: { userId: s
                     <div key={f.id} className="flex items-center gap-2">
                         <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
                             {f.friend.image ? (
-                                <img src={f.friend.image} alt={f.friend.username} className="w-8 h-8 rounded-full" />
+                                <img src={f.friend.image} alt={f.friend.username || "Friend"} className="w-8 h-8 rounded-full" />
                             ) : (
                                 f.friend.username?.charAt(0).toUpperCase()
                             )}

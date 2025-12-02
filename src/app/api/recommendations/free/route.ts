@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { subYears } from "date-fns";
 
@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
     } else {
       // fallback: query YouTube
       const youTube = await fetchYouTubeByArtist(artist.name, 4);
-      recommendations.push(...youTube.map((y:any) => ({ ...y, artistName: artist.name })));
+      recommendations.push(...youTube.map((y: any) => ({ ...y, artistName: artist.name })));
     }
   }
 
@@ -81,7 +81,7 @@ export async function GET(req: NextRequest) {
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
-  }).sort((a,b) => (new Date(b.publishedAt || b.createdAt || 0).getTime()) - (new Date(a.publishedAt || a.createdAt || 0).getTime()));
+  }).sort((a, b) => (new Date(b.publishedAt || b.createdAt || 0).getTime()) - (new Date(a.publishedAt || a.createdAt || 0).getTime()));
 
   return NextResponse.json(deduped.slice(0, 50));
 }

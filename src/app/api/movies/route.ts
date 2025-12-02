@@ -19,12 +19,11 @@ export async function GET(req: NextRequest) {
   }
   if (userId) {
     // Get movies recommended to this user
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      include: { recommended: true },
+    const recommendations = await prisma.recommendation.findMany({
+      where: { toUserId: userId },
+      include: { movie: true, fromUser: { select: { username: true } } },
     });
-    if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    return NextResponse.json(user.recommended);
+    return NextResponse.json(recommendations);
   }
   // List all movies
   const movies = await prisma.movie.findMany({ take: 20 });
@@ -38,14 +37,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   }
   // Add movie to friend's recommendations
-  await prisma.user.update({
-    where: { id: toUserId },
-    data: { recommended: { connect: { id: movieId } } },
-  });
-  // Optionally, track who recommended it
-  await prisma.movie.update({
-    where: { id: movieId },
-    data: { recommendedBy: { connect: { id: fromUserId } } },
+  await prisma.recommendation.create({
+    data: {
+      fromUserId,
+      toUserId,
+      movieId,
+    },
   });
   return NextResponse.json({ status: 'recommended' });
 }

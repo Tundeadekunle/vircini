@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
 
   const messages = await db.chatMessage.findMany({
     where: { sessionId: watchSessionId },
-    orderBy: { createdAt: "desc" },
+    orderBy: { timestamp: "desc" },
     take: limit,
     include: { user: { select: { id: true, username: true, image: true } } },
   });
