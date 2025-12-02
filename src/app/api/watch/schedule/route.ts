@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(request: Request) {
     try {
@@ -11,17 +10,13 @@ export async function POST(request: Request) {
         }
 
         // Create the session
-        // Note: Using a simple token generation here. In a real app, might want something more robust.
-        const sessionToken = uuidv4();
-
         const session = await prisma.watchSession.create({
             data: {
                 hostUserId: userId,
                 movieId: movieId || null,
-                videoId: videoId || (movieId ? undefined : "unknown"), // Fallback if no videoId provided for custom
+                videoId: videoId || (movieId ? "internal" : "unknown"), // Ensure videoId is always a string
                 platform: platform || "youtube",
                 scheduledTime: new Date(scheduledTime),
-                sessionToken: sessionToken,
                 isActive: true,
             },
         });
@@ -44,7 +39,7 @@ export async function POST(request: Request) {
                     type: "SESSION_INVITE",
                     title: "Watch Party Invite",
                     body: `You have been invited to watch "${title || 'a movie'}" on ${new Date(scheduledTime).toLocaleString()}`,
-                    data: { sessionId: session.id, sessionToken },
+                    data: { sessionId: session.id },
                 })),
             });
 

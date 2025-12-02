@@ -7,6 +7,7 @@ import FriendRecommendations from "./FriendRecommendations";
 import FriendRequests from "./FriendRequests";
 import FriendsList from "./FriendsList";
 import InvitesList from "./InvitesList";
+import FindFriendsButton from "./FindFriendsButton";
 import ScheduleSessionButton from "./ScheduleSessionButton"; // New client component for the button/modal logic
 import { prisma } from "@/lib/prisma";
 
@@ -102,6 +103,7 @@ export default async function DashboardPage() {
         <h1 className="text-2xl font-semibold">Welcome, {user.username}</h1>
         <div className="flex items-center gap-4">
           <ScheduleSessionButton userId={user.id} friends={friends} />
+          <FindFriendsButton />
           <div className="text-sm text-gray-500">Plan: <b>{plan}</b></div>
         </div>
       </div>

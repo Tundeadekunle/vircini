@@ -1,4 +1,4 @@
-import { type NextAuthOptions } from "next-auth";
+import { getServerSession, type NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
@@ -95,3 +95,6 @@ export const authOptions: NextAuthOptions = {
     },
   },
 };
+
+export const auth = () => getServerSession(authOptions);
+

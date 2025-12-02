@@ -7,7 +7,7 @@ interface FriendRequest {
     id: string;
     fromUser: {
         id: string;
-        username: string;
+        username: string | null;
         image: string | null;
     };
 }
@@ -78,7 +78,7 @@ export default function FriendRequests({ userId }: { userId: string }) {
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
                                 {req.fromUser.image ? (
-                                    <img src={req.fromUser.image} alt={req.fromUser.username} className="w-8 h-8 rounded-full" />
+                                    <img src={req.fromUser.image} alt={req.fromUser.username || "User"} className="w-8 h-8 rounded-full" />
                                 ) : (
                                     req.fromUser.username?.charAt(0).toUpperCase()
                                 )}

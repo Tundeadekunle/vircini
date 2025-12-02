@@ -7,7 +7,7 @@ interface Friend {
     id: string;
     friend: {
         id: string;
-        username: string;
+        username: string | null;
         image: string | null;
     };
 }
@@ -140,7 +140,7 @@ export default function ScheduleSessionModal({ isOpen, onClose, friends, userId 
                                         />
                                         <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
                                             {f.friend.image ? (
-                                                <img src={f.friend.image} alt={f.friend.username} className="w-8 h-8 rounded-full" />
+                                                <img src={f.friend.image} alt={f.friend.username || "User"} className="w-8 h-8 rounded-full" />
                                             ) : (
                                                 f.friend.username?.charAt(0).toUpperCase()
                                             )}

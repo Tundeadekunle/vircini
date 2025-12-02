@@ -5,7 +5,7 @@ import { useToast } from "@/components/ui/Toast";
 
 interface Recommendation {
     id: string;
-    username: string;
+    username: string | null;
     image: string | null;
     commonArtists: string[];
 }
@@ -56,7 +56,7 @@ export default function FriendRecommendations({ userId }: { userId: string }) {
                         <div className="flex items-center gap-2">
                             <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
                                 {user.image ? (
-                                    <img src={user.image} alt={user.username} className="w-10 h-10 rounded-full" />
+                                    <img src={user.image} alt={user.username || "User"} className="w-10 h-10 rounded-full" />
                                 ) : (
                                     user.username?.charAt(0).toUpperCase()
                                 )}

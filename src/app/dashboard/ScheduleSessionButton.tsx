@@ -7,7 +7,7 @@ interface Friend {
     id: string;
     friend: {
         id: string;
-        username: string;
+        username: string | null;
         image: string | null;
     };
 }
