@@ -6,7 +6,10 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // Connection URL removed (Prisma v7+); move connection URLs for Migrate to prisma.config.mjs
 }
+ 
+ 
 
 enum FriendRequestStatus {
   PENDING
